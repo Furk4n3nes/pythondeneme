@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - {{ ogrenci.Ad }} {{ ogrenci.Soyad }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-user-circle text-primary me-2"></i>
+                    Profilim
+                </h1>
+                <a href="{{ url_for('ogrenci_dashboard') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Dashboard'a Dön
+                </a>
+            </div>
+            
+            <!-- İstatistikler -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">İzlediğim Videolar</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_izlenme }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Beğendiğim Videolar</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_begeni }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Yorumlarım</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_yorum }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Profil Bilgileri -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-user-edit text-primary me-2"></i>
+                                Profil Bilgileri
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('ogrenci_profil') }}" method="POST">
+                                <div class="mb-3">
+                                    <label class="form-label">Ad</label>
+                                    <input type="text" class="form-control" name="ad" value="{{ ogrenci.Ad }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Soyad</label>
+                                    <input type="text" class="form-control" name="soyad" value="{{ ogrenci.Soyad }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">E-posta</label>
+                                    <input type="email" class="form-control" name="email" value="{{ ogrenci.Email }}" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-save me-2"></i>
+                                    Bilgileri Güncelle
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Şifre Değiştirme -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-key text-warning me-2"></i>
+                                Şifre Değiştir
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('ogrenci_profil') }}" method="POST">
+                                <div class="mb-3">
+                                    <label class="form-label">Mevcut Şifre</label>
+                                    <input type="password" class="form-control" name="mevcut_sifre" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Yeni Şifre</label>
+                                    <input type="password" class="form-control" name="yeni_sifre" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Yeni Şifre (Tekrar)</label>
+                                    <input type="password" class="form-control" name="yeni_sifre_tekrar" required>
+                                </div>
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="fas fa-key me-2"></i>
+                                    Şifreyi Değiştir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

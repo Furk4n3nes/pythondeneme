@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Profil - {{ admin.Ad }} {{ admin.Soyad }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-user-shield text-danger me-2"></i>
+                    Admin Profili
+                </h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-danger">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Dashboard'a Dön
+                </a>
+            </div>
+            
+            <!-- İstatistikler -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Onaylanan Videolar</h6>
+                                    <h2 class="card-title mb-0">{{ onaylanan_video_sayisi }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Reddedilen Videolar</h6>
+                                    <h2 class="card-title mb-0">{{ reddedilen_video_sayisi }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-envelope"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Mesajlar</h6>
+                                    <h2 class="card-title mb-0">{{ mesaj_sayisi }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profil Bilgileri -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-user-edit me-2"></i>
+                                Profil Bilgileri
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('admin_profil_guncelle') }}" method="POST">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Ad</label>
+                                        <input type="text" class="form-control" name="ad" value="{{ admin.Ad }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Soyad</label>
+                                        <input type="text" class="form-control" name="soyad" value="{{ admin.Soyad }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Kullanıcı Adı</label>
+                                        <input type="text" class="form-control" name="kullanici_adi" value="{{ admin.KullaniciAdi }}" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">E-posta</label>
+                                        <input type="email" class="form-control" name="email" value="{{ admin.Email }}" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="fas fa-save me-2"></i>
+                                            Değişiklikleri Kaydet
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-lock me-2"></i>
+                                Şifre Değiştir
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('admin_sifre_guncelle') }}" method="POST" class="password-form">
+                                <div class="mb-3">
+                                    <label class="form-label">Mevcut Şifre</label>
+                                    <input type="password" class="form-control" name="mevcut_sifre" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Yeni Şifre</label>
+                                    <input type="password" class="form-control" name="yeni_sifre" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Yeni Şifre (Tekrar)</label>
+                                    <input type="password" class="form-control" name="yeni_sifre_tekrar" required>
+                                </div>
+                                <button type="submit" class="btn btn-danger w-100">
+                                    <i class="fas fa-key me-2"></i>
+                                    Şifreyi Değiştir
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

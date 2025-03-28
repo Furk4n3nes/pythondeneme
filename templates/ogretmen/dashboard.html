@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Öğretmen Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
+                    Öğretmen Dashboard
+                </h1>
+                <span class="badge bg-primary">Öğretmen: {{ session.user_name }}</span>
+            </div>
+            
+            <!-- İstatistikler -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Videolarım</h6>
+                                    <h2 class="card-title mb-0">{{ video_sayisi }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Toplam İzlenme</h6>
+                                    <h2 class="card-title mb-0">{{ izlenme_sayisi }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Toplam Yorum</h6>
+                                    <h2 class="card-title mb-0">{{ yorum_sayisi }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sınıflar -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users text-primary me-2"></i>
+                        Sınıflar ve Dersler
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for sinif in siniflar %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="sinif-card">
+                                <div class="card h-100">
+                                    <div class="card-header sinif-header" 
+                                         data-bs-toggle="collapse" 
+                                         data-bs-target="#sinif{{ sinif.SinifID }}"
+                                         role="button"
+                                         aria-expanded="false">
+                                        <div class="d-flex align-items-center">
+                                            <div class="sinif-icon me-3">
+                                                <i class="fas fa-graduation-cap"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="card-title mb-0">{{ sinif.SinifAdi }}</h5>
+                                                <span class="badge bg-info">
+                                                    <i class="fas fa-user-graduate me-1"></i>
+                                                    {{ sinif.ogrenci_sayisi }} Öğrenci
+                                                </span>
+                                            </div>
+                                            <i class="fas fa-chevron-down ms-auto collapse-icon"></i>
+                                        </div>
+                                    </div>
+                                    <div class="collapse" id="sinif{{ sinif.SinifID }}">
+                                        <div class="card-body">
+                                            <div class="ders-list">
+                                                {% if sinif.dersler %}
+                                                    {% for ders in sinif.dersler %}
+                                                    <a href="{{ url_for('ogretmen_ders', ders_id=ders.DersID) }}" 
+                                                       class="ders-item">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="ders-icon">
+                                                                <i class="fas fa-book"></i>
+                                                            </div>
+                                                            <div class="ders-info">
+                                                                <h6 class="mb-0">{{ ders.DersAdi }}</h6>
+                                                                {% if ders.Aciklama %}
+                                                                <small class="text-muted">{{ ders.Aciklama }}</small>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <p class="text-muted mb-0">Bu sınıfta henüz ders bulunmuyor.</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diğer Videolar -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-film text-primary me-2"></i>
+                        Diğer Videolar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if sinif_video_map %}
+                    <div class="accordion" id="sinifVideoAccordion">
+                        {% for sinif_id, sinif_data in sinif_video_map.items() %}
+                        <div class="accordion-item mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#sinifVideolar{{ sinif_id }}">
+                                    <div class="d-flex align-items-center w-100">
+                                        <div class="me-3">
+                                            <i class="fas fa-graduation-cap text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ sinif_data.sinif.SinifAdi }}</h6>
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="sinifVideolar{{ sinif_id }}" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    {% for ders_id, ders_data in sinif_data.dersler.items() %}
+                                    <div class="ders-section border-bottom p-3">
+                                        <h6 class="ders-title mb-3">
+                                            <i class="fas fa-book text-primary me-2"></i>
+                                            {{ ders_data.ders.DersAdi }}
+                                        </h6>
+                                        {% for unite_id, unite_data in ders_data.uniteler.items() %}
+                                        <div class="unite-section mb-3">
+                                            <div class="unite-header mb-2">
+                                                <span class="badge bg-secondary">Ünite {{ unite_data.unite.UniteNo }}</span>
+                                                <span class="ms-2">{{ unite_data.unite.UniteAdi }}</span>
+                                            </div>
+                                            <div class="video-list">
+                                                {% for video_data in unite_data.videolar %}
+                                                <div class="video-card horizontal">
+                                                    <div class="video-content">
+                                                        <div class="video-info">
+                                                            <h6 class="video-title" title="{{ video_data.video.Baslik }}">
+                                                                {{ video_data.video.Baslik }}
+                                                            </h6>
+                                                            <div class="video-meta mb-2">
+                                                                <span class="badge 
+                                                                    {% if video_data.video.YukleyenTip == 'Ogretmen' %}bg-primary
+                                                                    {% elif video_data.video.YukleyenTip == 'Ogrenci' %}bg-success
+                                                                    {% else %}bg-danger{% endif %} me-2">
+                                                                    <i class="fas 
+                                                                        {% if video_data.video.YukleyenTip == 'Ogretmen' %}fa-chalkboard-teacher
+                                                                        {% elif video_data.video.YukleyenTip == 'Ogrenci' %}fa-user-graduate
+                                                                        {% else %}fa-user-shield{% endif %} me-1"></i>
+                                                                    {{ video_data.yukleyen.Ad }} {{ video_data.yukleyen.Soyad }}
+                                                                </span>
+                                                                <span class="text-muted">
+                                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                                    {{ video_data.video.YuklemeTarihi.strftime('%d.%m.%Y') }}
+                                                                </span>
+                                                            </div>
+                                                            {% if video_data.video.Aciklama %}
+                                                            <p class="video-description">
+                                                                {{ video_data.video.Aciklama[:150] }}{% if video_data.video.Aciklama|length > 150 %}...{% endif %}
+                                                            </p>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="video-actions">
+                                                            <a href="#" class="btn btn-sm btn-primary watch-btn" 
+                                                               data-bs-toggle="modal" 
+                                                               data-bs-target="#videoModal{{ video_data.video.VideoID }}">
+                                                                <i class="fas fa-play me-1"></i>İzle
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-video-slash fa-2x mb-3"></i>
+                        <p class="mb-0">Henüz video paylaşılmamış</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Video Modals -->
+{% for sinif_id, sinif_data in sinif_video_map.items() %}
+    {% for ders_id, ders_data in sinif_data.dersler.items() %}
+        {% for unite_id, unite_data in ders_data.uniteler.items() %}
+            {% for video_data in unite_data.videolar %}
+            <div class="modal fade" id="videoModal{{ video_data.video.VideoID }}" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ video_data.video.Baslik }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <div class="video-container">
+                                <iframe src="{{ get_embed_url(video_data.video.VideoURL) }}" 
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                </iframe>
+                            </div>
+                            {% if video_data.video.Aciklama %}
+                            <div class="p-3">
+                                <p class="mb-0">{{ video_data.video.Aciklama }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+{% endblock %} 

@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Videolarım - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-film text-danger me-2"></i>
+                    Videolarım
+                </h1>
+            </div>
+            
+            <!-- Filtreler -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <select class="form-select" id="sinifFilter" onchange="filterVideos()">
+                                <option value="">Tüm Sınıflar</option>
+                                {% for video, admin, konu, unite, sinif, ders in videolar %}
+                                <option value="{{ sinif.SinifID }}">{{ sinif.SinifAdi }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="dersFilter" onchange="filterVideos()">
+                                <option value="">Tüm Dersler</option>
+                                {% for video, admin, konu, unite, sinif, ders in videolar %}
+                                <option value="{{ ders.DersID }}">{{ ders.DersAdi }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="uniteFilter" onchange="filterVideos()">
+                                <option value="">Tüm Üniteler</option>
+                                {% for video, admin, konu, unite, sinif, ders in videolar %}
+                                <option value="{{ unite.UniteID }}">{{ unite.UniteAdi }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Videolar -->
+            <div class="row g-4" id="videoContainer">
+                {% for video, admin, konu, unite, sinif, ders in videolar %}
+                <div class="col-md-6 col-lg-4 video-card" 
+                     data-sinif="{{ sinif.SinifID }}"
+                     data-ders="{{ ders.DersID }}"
+                     data-unite="{{ unite.UniteID }}">
+                    <div class="card h-100">
+                        <div class="video-thumbnail">
+                            <iframe src="{{ video.VideoURL|get_embed_url }}"
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ video.Baslik }}</h5>
+                            <div class="video-meta mb-3">
+                                <span class="badge bg-primary me-2">{{ sinif.SinifAdi }}</span>
+                                <span class="badge bg-secondary me-2">{{ ders.DersAdi }}</span>
+                                <span class="badge bg-info">{{ unite.UniteAdi }}</span>
+                            </div>
+                            {% if video.Aciklama %}
+                            <p class="card-text">{{ video.Aciklama[:100] }}{% if video.Aciklama|length > 100 %}...{% endif %}</p>
+                            {% endif %}
+                            <div class="video-stats small text-muted mb-3">
+                                <i class="fas fa-eye me-1"></i> {{ video.izlenme_sayisi|default(0) }} görüntülenme
+                                <i class="fas fa-calendar-alt ms-2 me-1"></i> {{ video.YuklemeTarihi.strftime('%d.%m.%Y') }}
+                            </div>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-sm btn-outline-primary" onclick="videoDetay({{ video.VideoID }})">
+                                    <i class="fas fa-play me-1"></i>
+                                    İzle
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="videoDuzenle({{ video.VideoID }})">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Düzenle
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="videoSil({{ video.VideoID }})">
+                                    <i class="fas fa-trash me-1"></i>
+                                    Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Henüz video yüklememişsiniz.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Video Detay Modal -->
+<div class="modal fade" id="videoDetayModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoDetayBaslik"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="video-container" id="videoDetayIframe"></div>
+                <div class="p-3" id="videoDetayAciklama"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Video Düzenleme Modal -->
+<div class="modal fade" id="videoDuzenleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Video Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="videoDuzenleForm">
+                    <div class="mb-3">
+                        <label class="form-label">Video Başlığı</label>
+                        <input type="text" class="form-control" id="videoDuzenleBaslik" name="baslik" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Video URL</label>
+                        <input type="url" class="form-control" id="videoDuzenleURL" name="video_url" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Açıklama</label>
+                        <textarea class="form-control" id="videoDuzenleAciklama" name="aciklama" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="submit" class="btn btn-primary" form="videoDuzenleForm">
+                    <i class="fas fa-save me-2"></i>
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterVideos() {
+    const sinifId = document.getElementById('sinifFilter').value;
+    const dersId = document.getElementById('dersFilter').value;
+    const uniteId = document.getElementById('uniteFilter').value;
+    
+    document.querySelectorAll('.video-card').forEach(card => {
+        const showCard = (!sinifId || card.dataset.sinif === sinifId) &&
+                        (!dersId || card.dataset.ders === dersId) &&
+                        (!uniteId || card.dataset.unite === uniteId);
+        
+        card.style.display = showCard ? '' : 'none';
+    });
+}
+
+function videoDetay(videoId) {
+    fetch(`/admin/video/detay/${videoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const video = data.video;
+                document.getElementById('videoDetayBaslik').textContent = video.baslik;
+                document.getElementById('videoDetayIframe').innerHTML = `
+                    <iframe src="${video.embed_url}"
+                            class="w-100"
+                            style="height: 400px;"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>`;
+                document.getElementById('videoDetayAciklama').innerHTML = `
+                    <h6 class="mb-3">
+                        <span class="badge bg-primary me-2">${video.ders}</span>
+                        <span class="badge bg-secondary me-2">${video.unite}</span>
+                        <span class="badge bg-info">${video.konu}</span>
+                    </h6>
+                    <p class="mb-0">${video.aciklama || 'Açıklama bulunmuyor.'}</p>`;
+                
+                const modal = new bootstrap.Modal(document.getElementById('videoDetayModal'));
+                modal.show();
+            } else {
+                alert('Hata: ' + data.message);
+            }
+        });
+}
+
+function videoDuzenle(videoId) {
+    fetch(`/admin/video/detay/${videoId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const video = data.video;
+                document.getElementById('videoDuzenleBaslik').value = video.baslik;
+                document.getElementById('videoDuzenleURL').value = video.url;
+                document.getElementById('videoDuzenleAciklama').value = video.aciklama || '';
+                document.getElementById('videoDuzenleForm').onsubmit = function(e) {
+                    e.preventDefault();
+                    videoGuncelle(videoId);
+                };
+                
+                const modal = new bootstrap.Modal(document.getElementById('videoDuzenleModal'));
+                modal.show();
+            } else {
+                alert('Hata: ' + data.message);
+            }
+        });
+}
+
+function videoGuncelle(videoId) {
+    const formData = new FormData(document.getElementById('videoDuzenleForm'));
+    
+    fetch(`/admin/video/guncelle/${videoId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('videoDuzenleModal'));
+            modal.hide();
+            location.reload();
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    });
+}
+
+function videoSil(videoId) {
+    if (confirm('Bu videoyu silmek istediğinizden emin misiniz?')) {
+        fetch(`/admin/video/sil/${videoId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Hata: ' + data.message);
+            }
+        });
+    }
+}
+
+// Sayfa yüklendiğinde tekrarlanan seçenekleri kaldır
+document.addEventListener('DOMContentLoaded', () => {
+    ['sinifFilter', 'dersFilter', 'uniteFilter'].forEach(filterId => {
+        const select = document.getElementById(filterId);
+        const options = Array.from(select.options);
+        const uniqueOptions = new Map();
+        
+        options.forEach(option => {
+            if (!uniqueOptions.has(option.value)) {
+                uniqueOptions.set(option.value, option);
+            }
+        });
+        
+        select.innerHTML = '';
+        uniqueOptions.forEach(option => select.add(option));
+    });
+});
+</script>
+{% endblock %} 

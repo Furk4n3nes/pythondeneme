@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ders.DersAdi }} - Öğretmen Paneli{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Ders Başlığı -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{{ url_for('ogretmen_dashboard') }}" class="btn btn-outline-primary me-3">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Geri Dön
+                </a>
+                <div>
+                    <h1 class="mb-0">
+                        <i class="fas fa-book text-primary me-2"></i>
+                        {{ ders.DersAdi }}
+                    </h1>
+                    {% if ders.Aciklama %}
+                    <p class="text-muted mt-2">{{ ders.Aciklama }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Üniteler ve Konular -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="accordion" id="uniteAccordion">
+                        {% for unite in uniteler %}
+                        <div class="accordion-item unite-item mb-3">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#unite{{ unite.UniteID }}">
+                                    <div class="d-flex align-items-center w-100">
+                                        <div class="unite-no me-3">
+                                            <span class="badge bg-primary">Ünite {{ unite.UniteNo }}</span>
+                                        </div>
+                                        <div class="unite-info flex-grow-1">
+                                            <h5 class="mb-0">{{ unite.UniteAdi }}</h5>
+                                            {% if unite.konular|length > 0 %}
+                                            <small class="text-muted">
+                                                <i class="fas fa-list-ul me-1"></i>
+                                                {{ unite.konular|length }} Konu
+                                            </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="unite{{ unite.UniteID }}" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    {% if unite.konular %}
+                                    <div class="konu-list">
+                                        {% for konu in unite.konular %}
+                                        <div class="konu-item">
+                                            <div class="d-flex align-items-center">
+                                                <div class="konu-no me-3">
+                                                    <span class="badge bg-secondary">{{ konu.KonuNo }}</span>
+                                                </div>
+                                                <div class="konu-info flex-grow-1">
+                                                    <h6 class="mb-0">{{ konu.KonuAdi }}</h6>
+                                                    {% if konu.Aciklama %}
+                                                    <small class="text-muted">{{ konu.Aciklama }}</small>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="konu-actions">
+                                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="collapse" 
+                                                            data-bs-target="#videolar{{ konu.KonuID }}">
+                                                        <i class="fas fa-video"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- Video Listesi -->
+                                            <div class="collapse mt-3" id="videolar{{ konu.KonuID }}">
+                                                {% if konu.videolar %}
+                                                <div class="video-list">
+                                                    {% for video in konu.videolar %}
+                                                    <div class="video-card">
+                                                        <div class="video-header">
+                                                            <h6 class="video-title">{{ video.Baslik }}</h6>
+                                                            {% if not video.AktifMi %}
+                                                                {% if video.ReddetmeSebebi %}
+                                                                    <span class="badge bg-danger">
+                                                                        <i class="fas fa-times-circle me-1"></i>
+                                                                        Reddedildi: {{ video.ReddetmeSebebi }}
+                                                                    </span>
+                                                                {% else %}
+                                                                    <span class="badge bg-warning">
+                                                                        <i class="fas fa-clock me-1"></i>
+                                                                        Onay Bekliyor
+                                                                    </span>
+                                                                {% endif %}
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="video-content">
+                                                            <div class="video-info">
+                                                                <h6 class="video-title" title="{{ video.Baslik }}">{{ video.Baslik }}</h6>
+                                                                {% if video.Aciklama %}
+                                                                <p class="video-description">{{ video.Aciklama[:150] }}{% if video.Aciklama|length > 150 %}...{% endif %}</p>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div class="video-meta">
+                                                                <span class="upload-date">
+                                                                    <i class="fas fa-calendar-alt me-1"></i>
+                                                                    {{ video.YuklemeTarihi.strftime('%d.%m.%Y') }}
+                                                                </span>
+                                                                <div class="video-actions">
+                                                                    <a href="#" class="btn btn-sm btn-primary watch-btn me-2" 
+                                                                       data-bs-toggle="modal" 
+                                                                       data-bs-target="#videoModal{{ video.VideoID }}">
+                                                                        <i class="fas fa-play me-1"></i>İzle
+                                                                    </a>
+                                                                    <button class="btn btn-sm btn-warning me-2" 
+                                                                            data-bs-toggle="modal" 
+                                                                            data-bs-target="#editVideoModal{{ video.VideoID }}">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-sm btn-danger" 
+                                                                            data-bs-toggle="modal" 
+                                                                            data-bs-target="#deleteVideoModal{{ video.VideoID }}">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                    <!-- Yeni Video Ekle Butonu -->
+                                                    <div class="video-card horizontal new-video-card">
+                                                        <div class="video-content">
+                                                            <button class="btn btn-light w-100 h-100 d-flex align-items-center justify-content-center"
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#newVideoModal{{ konu.KonuID }}">
+                                                                <i class="fas fa-plus-circle me-2"></i>
+                                                                Yeni Video Ekle
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% else %}
+                                                <div class="text-center py-4">
+                                                    <i class="fas fa-video-slash fa-2x mb-3 text-muted"></i>
+                                                    <p class="text-muted mb-3">Bu konuda henüz video bulunmuyor</p>
+                                                    <button class="btn btn-primary" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#newVideoModal{{ konu.KonuID }}">
+                                                        <i class="fas fa-plus-circle me-2"></i>
+                                                        Yeni Video Ekle
+                                                    </button>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Bu ünitede henüz konu bulunmuyor
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sayfanın sonuna video modallarını ekle -->
+{% for unite in uniteler %}
+    {% for konu in unite.konular %}
+        {% for video in konu.videolar %}
+        <div class="modal fade" id="videoModal{{ video.VideoID }}" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">{{ video.Baslik }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="video-container">
+                            <iframe src="{{ get_embed_url(video.VideoURL) }}" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                            </iframe>
+                        </div>
+                        {% if video.Aciklama %}
+                        <div class="p-3">
+                            <p class="mb-0">{{ video.Aciklama }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+
+<!-- Video Düzenleme Modal -->
+{% for unite in uniteler %}
+    {% for konu in unite.konular %}
+        {% for video in konu.videolar %}
+        <div class="modal fade" id="editVideoModal{{ video.VideoID }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Video Düzenle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{ url_for('video_guncelle', video_id=video.VideoID) }}" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Video Başlığı</label>
+                                <input type="text" class="form-control" name="baslik" value="{{ video.Baslik }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Video URL</label>
+                                <input type="url" class="form-control" name="video_url" value="{{ video.VideoURL }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Açıklama</label>
+                                <textarea class="form-control" name="aciklama" rows="3">{{ video.Aciklama }}</textarea>
+                            </div>
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                                <button type="submit" class="btn btn-primary">Güncelle</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Silme Modal -->
+        <div class="modal fade" id="deleteVideoModal{{ video.VideoID }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Video Sil</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bu videoyu silmek istediğinizden emin misiniz?</p>
+                        <p class="text-muted mb-0">{{ video.Baslik }}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                        <form action="{{ url_for('video_sil', video_id=video.VideoID) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-danger">Sil</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+
+<!-- Yeni Video Ekleme Modal -->
+{% for unite in uniteler %}
+    {% for konu in unite.konular %}
+    <div class="modal fade" id="newVideoModal{{ konu.KonuID }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Yeni Video Ekle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('video_ekle', konu_id=konu.KonuID) }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Video Başlığı</label>
+                            <input type="text" class="form-control" name="baslik" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Video URL (YouTube)</label>
+                            <input type="url" class="form-control" name="video_url" required>
+                            <small class="text-muted">Örnek: https://www.youtube.com/watch?v=...</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Açıklama</label>
+                            <textarea class="form-control" name="aciklama" rows="3"></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-primary">Ekle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% endfor %}
+{% endblock %} 

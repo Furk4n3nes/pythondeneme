@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}{{ konu.KonuAdi }} - Videolar{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sol İçerik - Videolar -->
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Ana Sayfa</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('ders_detay', ders_id=ders.DersID) }}">{{ ders.DersAdi }}</a></li>
+                    <li class="breadcrumb-item active">{{ konu.KonuAdi }}</li>
+                </ol>
+            </nav>
+
+            <div class="konu-header mb-4">
+                <h1 class="display-5">
+                    <i class="fas fa-play-circle text-primary me-3"></i>
+                    {{ konu.KonuAdi }}
+                </h1>
+                <div class="konu-meta">
+                    <span class="badge bg-primary me-2">
+                        <i class="fas fa-book-open me-1"></i>
+                        {{ unite.UniteAdi }}
+                    </span>
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-video me-1"></i>
+                        {{ videolar|length }} Video
+                    </span>
+                </div>
+                <p class="lead text-muted mt-3">{{ konu.Aciklama }}</p>
+            </div>
+
+            {% if videolar %}
+            <div class="row g-4">
+                {% for video in videolar %}
+                <div class="col-md-6">
+                    <div class="video-card">
+                        <div class="video-thumbnail">
+                            <iframe 
+                                src="{{ video.embed_url }}" 
+                                title="{{ video.Baslik }}"
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div class="video-info">
+                            <h3 class="video-title">{{ video.Baslik }}</h3>
+                            <p class="video-desc">{{ video.Aciklama[:100] }}{% if video.Aciklama|length > 100 %}...{% endif %}</p>
+                            <div class="video-meta">
+                                <span class="uploader">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ video.YukleyenTip }}: {{ video.yukleyen_adi }}
+                                </span>
+                            </div>
+                            <div class="video-date mt-2 text-muted">
+                                <small>
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    {{ video.YuklemeTarihi.strftime('%d.%m.%Y') }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Bu konuda henüz video bulunmuyor.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sağ Sidebar - Üniteler ve Konular -->
+        <div class="col-md-4">
+            <div class="sidebar-nav">
+                <div class="ders-baslik mb-3">
+                    <h4>
+                        <i class="fas fa-book text-primary me-2"></i>
+                        {{ ders.DersAdi }}
+                    </h4>
+                </div>
+                <div class="unite-list-sidebar">
+                    {% for unite_item in ders.uniteler %}
+                    <div class="unite-item mb-3">
+                        <div class="unite-header-sidebar" data-bs-toggle="collapse" 
+                             data-bs-target="#unite{{ unite_item.UniteID }}_sidebar">
+                            <i class="fas fa-chevron-right unite-icon"></i>
+                            <span class="unite-no">{{ unite_item.UniteNo }}.</span>
+                            {{ unite_item.UniteAdi }}
+                        </div>
+                        <div class="collapse {% if unite_item.UniteID == unite.UniteID %}show{% endif %}" 
+                             id="unite{{ unite_item.UniteID }}_sidebar">
+                            <div class="konu-list-sidebar">
+                                {% for konu_item in unite_item.konular %}
+                                <a href="{{ url_for('konu_videolar', konu_id=konu_item.KonuID) }}" 
+                                   class="konu-link {% if konu_item.KonuID == konu.KonuID %}active{% endif %}">
+                                    <span class="konu-no">{{ konu_item.KonuNo }}.</span>
+                                    {{ konu_item.KonuAdi }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

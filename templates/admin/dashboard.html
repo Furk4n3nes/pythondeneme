@@ -1,0 +1,853 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-user-shield text-danger me-2"></i>
+                    Admin Dashboard
+                </h1>
+                <span class="badge bg-danger">Admin: {{ session.user_name }}</span>
+            </div>
+            
+            <!-- İstatistikler -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Öğretmenler</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_ogretmen }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-user-graduate"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Öğrenciler</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_ogrenci }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Videolar</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_video }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">İzlenmeler</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_izlenme }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- İstatistiklerden sonra -->
+            <!-- 1. Sınıflar Bölümü -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-school text-primary me-2"></i>
+                            Sınıflar
+                        </h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#yeniSinifModal">
+                            <i class="fas fa-plus me-1"></i>
+                            Yeni Sınıf
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3" id="siniflarContainer">
+                        {% for sinif in siniflar %}
+                        <div class="col-md-4" id="sinif{{ sinif.SinifID }}">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ sinif.SinifAdi }}</h5>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-user-graduate me-1"></i>
+                                            {{ sinif.ogrenci_sayisi }} Öğrenci
+                                        </span>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-book me-1"></i>
+                                            {{ sinif.ders_sayisi }} Ders
+                                        </span>
+                                    </div>
+                                    <div class="btn-group w-100">
+                                        <button class="btn btn-outline-primary btn-sm" onclick="sinifDuzenle({{ sinif.SinifID }}, '{{ sinif.SinifAdi }}', '{{ sinif.Aciklama|default('', true) }}')">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Düzenle
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm" onclick="sinifSil({{ sinif.SinifID }})">
+                                            <i class="fas fa-trash me-1"></i>
+                                            Sil
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2. Video Ekleme Bölümü -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-video me-2"></i>
+                            Video Yönetimi
+                        </h5>
+                        <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#yeniVideoModal">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Yeni Video Ekle
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if onay_bekleyen_videolar %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-clock me-2"></i>
+                        {{ onay_bekleyen_videolar|length }} video onay bekliyor
+                    </div>
+                    {% endif %}
+                    
+                    {% if reddedilen_videolar %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle me-2"></i>
+                        {{ reddedilen_videolar|length }} video reddedildi
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- 3. Tüm Videolar Bölümü -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-film text-primary me-2"></i>
+                            Tüm Videolar
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" id="sinifFilter" onchange="filterVideos()">
+                                <option value="">Tüm Sınıflar</option>
+                                {% for sinif in siniflar %}
+                                <option value="{{ sinif.SinifID }}">{{ sinif.SinifAdi }}</option>
+                                {% endfor %}
+                            </select>
+                            <select class="form-select form-select-sm" id="uniteFilter" onchange="filterVideos()">
+                                <option value="">Tüm Üniteler</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Video</th>
+                                    <th>Yükleyen</th>
+                                    <th>Sınıf</th>
+                                    <th>Ders</th>
+                                    <th>Ünite</th>
+                                    <th>Tarih</th>
+                                </tr>
+                            </thead>
+                            <tbody id="videoTableBody">
+                                {% for video, ogretmen, ogrenci, admin, konu, unite, sinif, ders in videolar %}
+                                <tr data-sinif="{{ sinif.SinifID }}" data-unite="{{ unite.UniteID }}">
+                                    <td>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#videoModal{{ video.VideoID }}">
+                                            {{ video.Baslik }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if video.YukleyenTip == 'Ogretmen' %}bg-primary
+                                            {% elif video.YukleyenTip == 'Ogrenci' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {% if video.YukleyenTip == 'Ogretmen' %}
+                                                {{ ogretmen.Ad }} {{ ogretmen.Soyad }}
+                                            {% elif video.YukleyenTip == 'Ogrenci' %}
+                                                {{ ogrenci.Ad }} {{ ogrenci.Soyad }}
+                                            {% else %}
+                                                {{ admin.Ad }} {{ admin.Soyad }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ sinif.SinifAdi }}</td>
+                                    <td>{{ ders.DersAdi }}</td>
+                                    <td>{{ unite.UniteAdi }}</td>
+                                    <td>{{ video.YuklemeTarihi.strftime('%d.%m.%Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Onay Bekleyen Videolar Tablosu -->
+            {% if onay_bekleyen_videolar %}
+            <div class="card mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Onay Bekleyen Videolar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Video</th>
+                                    <th>Yükleyen</th>
+                                    <th>Sınıf</th>
+                                    <th>Ders</th>
+                                    <th>Ünite</th>
+                                    <th>Tarih</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for video, ogretmen, ogrenci, admin, konu, unite, sinif, ders in onay_bekleyen_videolar %}
+                                <tr>
+                                    <td>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#videoModal{{ video.VideoID }}">
+                                            {{ video.Baslik }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if video.YukleyenTip == 'Ogretmen' %}bg-primary
+                                            {% elif video.YukleyenTip == 'Ogrenci' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {% if video.YukleyenTip == 'Ogretmen' %}
+                                                {{ ogretmen.Ad }} {{ ogretmen.Soyad }}
+                                            {% elif video.YukleyenTip == 'Ogrenci' %}
+                                                {{ ogrenci.Ad }} {{ ogrenci.Soyad }}
+                                            {% else %}
+                                                {{ admin.Ad }} {{ admin.Soyad }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ sinif.SinifAdi }}</td>
+                                    <td>{{ ders.DersAdi }}</td>
+                                    <td>{{ unite.UniteAdi }}</td>
+                                    <td>{{ video.YuklemeTarihi.strftime('%d.%m.%Y') }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-success" onclick="onaylaVideo({{ video.VideoID }})">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="reddetVideo({{ video.VideoID }})">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Reddedilen Videolar Tablosu -->
+            {% if reddedilen_videolar %}
+            <div class="card mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-times-circle me-2"></i>
+                        Reddedilen Videolar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Video</th>
+                                    <th>Yükleyen</th>
+                                    <th>Sınıf</th>
+                                    <th>Ders</th>
+                                    <th>Ünite</th>
+                                    <th>Tarih</th>
+                                    <th>Red Sebebi</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for video, ogretmen, ogrenci, admin, konu, unite, sinif, ders in reddedilen_videolar %}
+                                <tr>
+                                    <td>
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#videoModal{{ video.VideoID }}">
+                                            {{ video.Baslik }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if video.YukleyenTip == 'Ogretmen' %}bg-primary
+                                            {% elif video.YukleyenTip == 'Ogrenci' %}bg-success
+                                            {% else %}bg-danger{% endif %}">
+                                            {% if video.YukleyenTip == 'Ogretmen' %}
+                                                {{ ogretmen.Ad }} {{ ogretmen.Soyad }}
+                                            {% elif video.YukleyenTip == 'Ogrenci' %}
+                                                {{ ogrenci.Ad }} {{ ogrenci.Soyad }}
+                                            {% else %}
+                                                {{ admin.Ad }} {{ admin.Soyad }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ sinif.SinifAdi }}</td>
+                                    <td>{{ ders.DersAdi }}</td>
+                                    <td>{{ unite.UniteAdi }}</td>
+                                    <td>{{ video.YuklemeTarihi.strftime('%d.%m.%Y') }}</td>
+                                    <td>
+                                        <span class="text-danger">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            {{ video.ReddetmeSebebi }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-success" onclick="onaylaVideo({{ video.VideoID }})">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="reddetVideo({{ video.VideoID }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Video Modals -->
+{% for video, ogretmen, ogrenci, admin, konu, unite, sinif, ders in videolar %}
+<div class="modal fade" id="videoModal{{ video.VideoID }}" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ video.Baslik }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="video-container">
+                    <iframe src="{{ get_embed_url(video.VideoURL) }}" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+                {% if video.Aciklama %}
+                <div class="p-3">
+                    <p class="mb-0">{{ video.Aciklama }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Yeni Sınıf Modal -->
+<div class="modal fade" id="yeniSinifModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Sınıf Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="yeniSinifForm">
+                    <div class="mb-3">
+                        <label class="form-label">Sınıf Adı</label>
+                        <input type="text" class="form-control" name="sinif_adi" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Açıklama</label>
+                        <textarea class="form-control" name="aciklama" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="sinifEkle()">Ekle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sınıf Düzenleme Modal -->
+<div class="modal fade" id="duzenlemeSinifModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sınıf Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="duzenlemeSinifForm">
+                    <input type="hidden" id="duzenlenecekSinifId" name="sinif_id">
+                    <div class="mb-3">
+                        <label class="form-label">Sınıf Adı</label>
+                        <input type="text" class="form-control" name="sinif_adi" id="duzenlenecekSinifAdi" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Açıklama</label>
+                        <textarea class="form-control" name="aciklama" id="duzenlenecekSinifAciklama" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="sinifGuncelle()">Güncelle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sayfanın sonuna modal ekleyin -->
+<div class="modal fade" id="yeniVideoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Video Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="videoEkleForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Sınıf</label>
+                            <select class="form-select" id="videoSinif" onchange="dersleriGetir()" required>
+                                <option value="">Sınıf Seçin</option>
+                                {% for sinif in siniflar %}
+                                <option value="{{ sinif.SinifID }}">{{ sinif.SinifAdi }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ders</label>
+                            <select class="form-select" id="videoDers" onchange="uniteleriGetir()" required disabled>
+                                <option value="">Önce Sınıf Seçin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Ünite</label>
+                            <select class="form-select" id="videoUnite" onchange="konulariGetir()" required disabled>
+                                <option value="">Önce Ders Seçin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Konu</label>
+                            <select class="form-select" id="videoKonu" name="konu_id" required disabled>
+                                <option value="">Önce Ünite Seçin</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Video Başlığı</label>
+                            <input type="text" class="form-control" name="baslik" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Video URL (YouTube)</label>
+                            <input type="url" class="form-control" name="video_url" required>
+                            <small class="text-muted">Örnek: https://www.youtube.com/watch?v=...</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Açıklama</label>
+                            <textarea class="form-control" name="aciklama" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="videoEkle()">
+                    <i class="fas fa-save me-2"></i>
+                    Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function onaylaVideo(videoId) {
+    if (confirm('Bu videoyu onaylamak istediğinizden emin misiniz?')) {
+        fetch(`/admin/video/onayla/${videoId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();  // Sayfayı yenile
+            } else {
+                alert('Bir hata oluştu: ' + data.message);
+            }
+        });
+    }
+}
+
+function reddetVideo(videoId) {
+    if (confirm('Bu videoyu reddetmek istediğinizden emin misiniz?')) {
+        fetch(`/admin/video/reddet/${videoId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();  // Sayfayı yenile
+            } else {
+                alert('Bir hata oluştu: ' + data.message);
+            }
+        });
+    }
+}
+
+function sinifEkle() {
+    const form = document.getElementById('yeniSinifForm');
+    const formData = new FormData(form);
+    
+    fetch('/admin/sinif/ekle', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Yeni sınıf kartını oluştur
+            const yeniSinifHTML = `
+                <div class="col-md-4" id="sinif${data.sinif.id}">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${data.sinif.adi}</h5>
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="badge bg-info">
+                                    <i class="fas fa-user-graduate me-1"></i>
+                                    ${data.sinif.ogrenci_sayisi} Öğrenci
+                                </span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-book me-1"></i>
+                                    ${data.sinif.ders_sayisi} Ders
+                                </span>
+                            </div>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-outline-primary btn-sm" onclick="sinifDuzenle(${data.sinif.id}, '${data.sinif.adi}', '${data.sinif.aciklama}')">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Düzenle
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="sinifSil(${data.sinif.id})">
+                                    <i class="fas fa-trash me-1"></i>
+                                    Sil
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Yeni sınıfı listeye ekle
+            document.getElementById('siniflarContainer').insertAdjacentHTML('beforeend', yeniSinifHTML);
+            
+            // Modalı kapat ve formu temizle
+            const modal = bootstrap.Modal.getInstance(document.getElementById('yeniSinifModal'));
+            modal.hide();
+            form.reset();
+            
+            // Başarı mesajı göster
+            alert(data.message);
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        alert('Bir hata oluştu!');
+    });
+}
+
+function sinifSil(sinifId) {
+    if (confirm('Bu sınıfı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!')) {
+        fetch(`/admin/sinif/sil/${sinifId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Sınıf kartını sayfadan kaldır
+                document.getElementById(`sinif${sinifId}`).remove();
+                alert(data.message);
+            } else {
+                alert('Hata: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            alert('Bir hata oluştu!');
+        });
+    }
+}
+
+function sinifDuzenle(sinifId, sinifAdi, sinifAciklama) {
+    // Modal form alanlarını doldur
+    document.getElementById('duzenlenecekSinifId').value = sinifId;
+    document.getElementById('duzenlenecekSinifAdi').value = sinifAdi;
+    document.getElementById('duzenlenecekSinifAciklama').value = sinifAciklama;
+    
+    // Modalı göster
+    const modal = new bootstrap.Modal(document.getElementById('duzenlemeSinifModal'));
+    modal.show();
+}
+
+function sinifGuncelle() {
+    const form = document.getElementById('duzenlemeSinifForm');
+    const formData = new FormData(form);
+    const sinifId = document.getElementById('duzenlenecekSinifId').value;
+    
+    fetch(`/admin/sinif/guncelle/${sinifId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Sınıf kartını güncelle
+            const sinifKarti = document.getElementById(`sinif${data.sinif.id}`);
+            sinifKarti.querySelector('.card-title').textContent = data.sinif.adi;
+            
+            // Modalı kapat
+            const modal = bootstrap.Modal.getInstance(document.getElementById('duzenlemeSinifModal'));
+            modal.hide();
+            
+            alert(data.message);
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        alert('Bir hata oluştu!');
+    });
+}
+
+// Üniteleri saklamak için global değişken
+let uniteler = {
+    {% for video, ogretmen, ogrenci, admin, konu, unite, sinif, ders in videolar %}
+    "{{ unite.UniteID }}": {
+        "id": "{{ unite.UniteID }}",
+        "adi": "{{ unite.UniteAdi }}",
+        "sinifId": "{{ sinif.SinifID }}"
+    },
+    {% endfor %}
+};
+
+function updateUniteFilter(sinifId) {
+    const uniteFilter = document.getElementById('uniteFilter');
+    uniteFilter.innerHTML = '<option value="">Tüm Üniteler</option>';
+    
+    // Seçilen sınıfa ait üniteleri filtrele
+    const filteredUniteler = Object.values(uniteler).filter(unite => 
+        !sinifId || unite.sinifId === sinifId
+    );
+    
+    // Tekrarlanan üniteleri kaldır
+    const uniqueUniteler = filteredUniteler.filter((unite, index, self) =>
+        index === self.findIndex((u) => u.id === unite.id)
+    );
+    
+    // Ünite seçeneklerini ekle
+    uniqueUniteler.forEach(unite => {
+        const option = document.createElement('option');
+        option.value = unite.id;
+        option.textContent = unite.adi;
+        uniteFilter.appendChild(option);
+    });
+}
+
+function filterVideos() {
+    const sinifId = document.getElementById('sinifFilter').value;
+    const uniteId = document.getElementById('uniteFilter').value;
+    const rows = document.querySelectorAll('#videoTableBody tr');
+    
+    updateUniteFilter(sinifId);
+    
+    rows.forEach(row => {
+        const rowSinifId = row.getAttribute('data-sinif');
+        const rowUniteId = row.getAttribute('data-unite');
+        const showRow = (!sinifId || rowSinifId === sinifId) && 
+                       (!uniteId || rowUniteId === uniteId);
+        
+        row.style.display = showRow ? '' : 'none';
+    });
+}
+
+// Sayfa yüklendiğinde ünite filtresini güncelle
+document.addEventListener('DOMContentLoaded', () => {
+    updateUniteFilter('');
+});
+
+function dersleriGetir() {
+    const sinifId = document.getElementById('videoSinif').value;
+    const dersSelect = document.getElementById('videoDers');
+    
+    dersSelect.innerHTML = '<option value="">Ders Seçin</option>';
+    dersSelect.disabled = true;
+    
+    if (!sinifId) return;
+    
+    fetch(`/admin/dersler/${sinifId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                data.dersler.forEach(ders => {
+                    const option = document.createElement('option');
+                    option.value = ders.id;
+                    option.textContent = ders.adi;
+                    dersSelect.appendChild(option);
+                });
+                dersSelect.disabled = false;
+            }
+        });
+}
+
+function uniteleriGetir() {
+    const dersId = document.getElementById('videoDers').value;
+    const uniteSelect = document.getElementById('videoUnite');
+    
+    uniteSelect.innerHTML = '<option value="">Ünite Seçin</option>';
+    uniteSelect.disabled = true;
+    
+    if (!dersId) return;
+    
+    fetch(`/admin/uniteler/${dersId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                data.uniteler.forEach(unite => {
+                    const option = document.createElement('option');
+                    option.value = unite.id;
+                    option.textContent = unite.adi;
+                    uniteSelect.appendChild(option);
+                });
+                uniteSelect.disabled = false;
+            }
+        });
+}
+
+function konulariGetir() {
+    const uniteId = document.getElementById('videoUnite').value;
+    const konuSelect = document.getElementById('videoKonu');
+    
+    konuSelect.innerHTML = '<option value="">Konu Seçin</option>';
+    konuSelect.disabled = true;
+    
+    if (!uniteId) return;
+    
+    fetch(`/admin/konular/${uniteId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                data.konular.forEach(konu => {
+                    const option = document.createElement('option');
+                    option.value = konu.id;
+                    option.textContent = konu.adi;
+                    konuSelect.appendChild(option);
+                });
+                konuSelect.disabled = false;
+            }
+        });
+}
+
+function videoEkle() {
+    const form = document.getElementById('videoEkleForm');
+    const formData = new FormData(form);
+    
+    fetch('/admin/video/ekle', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('yeniVideoModal'));
+            modal.hide();
+            form.reset();
+            alert(data.message);
+            location.reload();  // Sayfayı yenile
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        alert('Bir hata oluştu!');
+    });
+}
+</script>
+{% endblock %} 

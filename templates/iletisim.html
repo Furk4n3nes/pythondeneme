@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}İletişim - Eğitim Platformu{% endblock %}
+
+{% block content %}
+<!-- Üst Banner -->
+<div class="contact-banner mb-5">
+    <div class="container">
+        <h1 class="text-center mb-3">Bizimle İletişime Geçin</h1>
+        <p class="text-center lead">Sorularınız, önerileriniz veya işbirliği teklifleriniz için bize ulaşın.</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4">
+        <!-- İletişim Bilgileri -->
+        <div class="col-lg-6">
+            <div class="card contact-card h-100">
+                <div class="card-body">
+                    <h2 class="section-title mb-4">
+                        <i class="fas fa-address-card text-primary me-2"></i>
+                        İletişim Bilgileri
+                    </h2>
+                    
+                    <div class="contact-info">
+                        <div class="info-item mb-4">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="info-content">
+                                <h5>Adres</h5>
+                                <p>Üniversite Caddesi No:123, Teknokent, İstanbul</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item mb-4">
+                            <div class="info-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="info-content">
+                                <h5>Telefon</h5>
+                                <p>+90 (212) 123 45 67</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item mb-4">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="info-content">
+                                <h5>E-posta</h5>
+                                <p>info@steamegitim.com</p>
+                            </div>
+                        </div>
+                        
+                        <hr class="styled-hr my-4">
+                        
+                        <div class="social-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-share-alt text-primary me-2"></i>
+                                Sosyal Medya Hesaplarımız
+                            </h5>
+                            <div class="social-links">
+                                <a href="#" class="social-link facebook" title="Facebook">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                                <a href="#" class="social-link twitter" title="Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="social-link instagram" title="Instagram">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                                <a href="#" class="social-link linkedin" title="LinkedIn">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="social-link youtube" title="YouTube">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mesaj Formu -->
+        <div class="col-lg-6">
+            <div class="card contact-card h-100">
+                <div class="card-body">
+                    <h2 class="section-title mb-4">
+                        <i class="fas fa-envelope text-primary me-2"></i>
+                        Bize Mesaj Gönderin
+                    </h2>
+                    
+                    {% if 'user_id' in session %}
+                        <form method="POST" action="{{ url_for('mesaj_gonder') }}" class="contact-form">
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="konu" name="konu" placeholder="Konu" required>
+                                <label for="konu">Konu</label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <textarea class="form-control" id="mesaj" name="mesaj" 
+                                          style="height: 150px" placeholder="Mesajınız" required></textarea>
+                                <label for="mesaj">Mesajınız</label>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Mesaj Gönder
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="login-prompt text-center p-4">
+                            <div class="login-icon mb-3">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <h4 class="mb-3">Mesaj Göndermek İçin Giriş Yapın</h4>
+                            <p class="text-muted mb-4">Mesaj gönderebilmek için üye girişi yapmanız gerekmektedir.</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Giriş Yap
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

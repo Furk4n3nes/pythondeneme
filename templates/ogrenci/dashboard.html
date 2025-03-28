@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Öğrenci Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-user-graduate text-primary me-2"></i>
+                    Hoş Geldin, {{ ogrenci.Ad }}
+                </h1>
+                <span class="badge bg-primary">Öğrenci</span>
+            </div>
+            
+            <!-- İstatistikler -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">İzlediğim Videolar</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_izlenme }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Beğendiğim Videolar</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_begeni }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card dashboard-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon me-3">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-subtitle text-muted mb-1">Yorumlarım</h6>
+                                    <h2 class="card-title mb-0">{{ toplam_yorum }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- İstatistiklerden sonra, son izlenen videolardan önce -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book text-primary me-2"></i>
+                        Derslerim
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for sinif in siniflar %}
+                        <div class="col-md-4 mb-3">
+                            <div class="dropdown w-100">
+                                <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-school me-2"></i>
+                                    {{ sinif.SinifAdi }}
+                                </button>
+                                <ul class="dropdown-menu w-100">
+                                    {% for ders in dersler[sinif.SinifID] %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('ogrenci_ders', ders_id=ders.DersID) }}">
+                                            <i class="fas fa-book-open me-2"></i>
+                                            {{ ders.DersAdi }}
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <li>
+                                        <span class="dropdown-item text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Ders bulunamadı
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Son İzlenen Videolar -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history text-primary me-2"></i>
+                        Son İzlenen Videolar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        {% for video, konu, unite, ders in izlenen_videolar %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100">
+                                <div class="video-thumbnail">
+                                    <iframe src="{{ video.VideoURL|get_embed_url }}"
+                                            frameborder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ video.Baslik }}</h5>
+                                    <div class="video-meta mb-3">
+                                        <span class="badge bg-primary me-2">{{ ders.DersAdi }}</span>
+                                        <span class="badge bg-secondary">{{ unite.UniteAdi }}</span>
+                                    </div>
+                                    <a href="{{ url_for('video_detay', video_id=video.VideoID) }}" 
+                                       class="btn btn-primary btn-sm w-100">
+                                        <i class="fas fa-play me-2"></i>
+                                        İzle
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Henüz video izlememişsiniz.
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Beğenilen Videolar -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-heart text-danger me-2"></i>
+                        Beğendiğim Videolar
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        {% for video, konu, unite, ders in begenilen_videolar %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100">
+                                <div class="video-thumbnail">
+                                    <iframe src="{{ video.VideoURL|get_embed_url }}"
+                                            frameborder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ video.Baslik }}</h5>
+                                    <div class="video-meta mb-3">
+                                        <span class="badge bg-primary me-2">{{ ders.DersAdi }}</span>
+                                        <span class="badge bg-secondary">{{ unite.UniteAdi }}</span>
+                                    </div>
+                                    <a href="{{ url_for('video_detay', video_id=video.VideoID) }}" 
+                                       class="btn btn-primary btn-sm w-100">
+                                        <i class="fas fa-play me-2"></i>
+                                        İzle
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Henüz video beğenmemişsiniz.
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Stilleri -->
+<style>
+.dropdown-menu {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dropdown menülerin genişliğini düzelt
+    document.querySelectorAll('.dropdown').forEach(dropdown => {
+        dropdown.addEventListener('show.bs.dropdown', function () {
+            const dropdownMenu = this.querySelector('.dropdown-menu');
+            dropdownMenu.style.width = this.querySelector('.dropdown-toggle').offsetWidth + 'px';
+        });
+    });
+});
+</script>
+{% endblock %} 

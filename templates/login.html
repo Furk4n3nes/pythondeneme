@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Giriş / Kayıt - Eğitim Platformu{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card auth-card">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item flex-fill" role="presentation">
+                            <button class="nav-link active w-100" id="login-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#login" type="button" role="tab">
+                                <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                            </button>
+                        </li>
+                        <li class="nav-item flex-fill" role="presentation">
+                            <button class="nav-link w-100" id="register-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#register" type="button" role="tab">
+                                <i class="fas fa-user-plus me-2"></i>Kayıt Ol
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Giriş Formu -->
+                        <div class="tab-pane fade show active" id="login" role="tabpanel">
+                            <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+                                <input type="hidden" name="form_type" value="login">
+                                
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="kullanici_tipi" name="kullanici_tipi" required>
+                                        <option value="admin">Admin</option>
+                                        <option value="ogretmen">Öğretmen</option>
+                                        <option value="ogrenci">Öğrenci</option>
+                                    </select>
+                                    <label for="kullanici_tipi">Kullanıcı Tipi</label>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="email" 
+                                           name="email" placeholder="E-posta" required>
+                                    <label for="email">E-posta</label>
+                                </div>
+                                
+                                <div class="form-floating mb-4">
+                                    <input type="password" class="form-control" id="sifre" 
+                                           name="sifre" placeholder="Şifre" required>
+                                    <label for="sifre">Şifre</label>
+                                </div>
+                                
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Kayıt Formu -->
+                        <div class="tab-pane fade" id="register" role="tabpanel">
+                            <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+                                <input type="hidden" name="form_type" value="register">
+                                
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="reg_kullanici_tipi" 
+                                            name="kullanici_tipi" required>
+                                        <option value="ogretmen">Öğretmen</option>
+                                        <option value="ogrenci">Öğrenci</option>
+                                    </select>
+                                    <label for="reg_kullanici_tipi">Kullanıcı Tipi</label>
+                                </div>
+                                
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="reg_ad" 
+                                                   name="ad" placeholder="Ad" required>
+                                            <label for="reg_ad">Ad</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="reg_soyad" 
+                                                   name="soyad" placeholder="Soyad" required>
+                                            <label for="reg_soyad">Soyad</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-floating mb-3 brans-field" style="display: none;">
+                                    <input type="text" class="form-control" id="reg_brans" 
+                                           name="brans" placeholder="Branş">
+                                    <label for="reg_brans">Branş</label>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="reg_email" 
+                                           name="email" placeholder="E-posta" required>
+                                    <label for="reg_email">E-posta</label>
+                                </div>
+                                
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="reg_kullanici_adi" 
+                                           name="kullanici_adi" placeholder="Kullanıcı Adı" required>
+                                    <label for="reg_kullanici_adi">Kullanıcı Adı</label>
+                                </div>
+                                
+                                <div class="form-floating mb-4">
+                                    <input type="password" class="form-control" id="reg_sifre" 
+                                           name="sifre" placeholder="Şifre" required>
+                                    <label for="reg_sifre">Şifre</label>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-user-plus me-2"></i>Kayıt Ol
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sayfa sonuna JavaScript ekleyin -->
+<script>
+// Sayfa yüklendiğinde ve kullanıcı tipi değiştiğinde branş alanını kontrol et
+function checkUserType() {
+    const userType = document.getElementById('reg_kullanici_tipi').value;
+    const bransField = document.querySelector('.brans-field');
+    const bransInput = document.getElementById('reg_brans');
+    
+    if (userType === 'ogretmen') {
+        bransField.style.display = 'block';
+        bransInput.required = true;
+    } else {
+        bransField.style.display = 'none';
+        bransInput.required = false;
+        bransInput.value = ''; // Öğrenci seçildiğinde branş alanını temizle
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Sayfa yüklendiğinde kontrol et
+    checkUserType();
+    
+    // Kullanıcı tipi değiştiğinde kontrol et
+    document.getElementById('reg_kullanici_tipi').addEventListener('change', checkUserType);
+    
+    // URL'de hash varsa ilgili tabı aç
+    let hash = window.location.hash;
+    if (hash) {
+        let tabId = hash.replace('#', '');
+        let tab = new bootstrap.Tab(document.querySelector(`button[data-bs-target="#${tabId}"]`));
+        tab.show();
+    }
+    
+    // Flash mesajı varsa ve başarılı kayıtsa giriş tabını aç
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success' and 'Kayıt işlemi başarıyla tamamlandı' in message %}
+                    let loginTab = new bootstrap.Tab(document.querySelector('#login-tab'));
+                    loginTab.show();
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+});
+</script>
+{% endblock %} 

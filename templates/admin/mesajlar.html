@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Mesajlar - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-envelope text-primary me-2"></i>
+                    Mesajlar
+                </h1>
+                <span class="badge bg-danger">Admin: {{ session.user_name }}</span>
+            </div>
+            
+            <!-- Mesaj Listesi -->
+            <div class="card">
+                <div class="card-body">
+                    {% if mesajlar %}
+                    <div class="list-group">
+                        {% for mesaj, ogretmen, ogrenci, admin in mesajlar %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between align-items-center">
+                                <h6 class="mb-1">
+                                    <span class="badge 
+                                        {% if mesaj.GonderenTip == 'Ogretmen' %}bg-primary
+                                        {% elif mesaj.GonderenTip == 'Ogrenci' %}bg-success
+                                        {% else %}bg-danger{% endif %} me-2">
+                                        {% if mesaj.GonderenTip == 'Ogretmen' %}
+                                            {{ ogretmen.Ad }} {{ ogretmen.Soyad }}
+                                        {% elif mesaj.GonderenTip == 'Ogrenci' %}
+                                            {{ ogrenci.Ad }} {{ ogrenci.Soyad }}
+                                        {% else %}
+                                            {{ admin.Ad }} {{ admin.Soyad }}
+                                        {% endif %}
+                                    </span>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ mesaj.GondermeTarihi.strftime('%d.%m.%Y %H:%M') }}
+                                </small>
+                            </div>
+                            <p class="mb-1 mt-2">{{ mesaj.MesajIcerik }}</p>
+                            {% if not mesaj.CevaplananMesajID %}
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="cevapla({{ mesaj.MesajID }}, '{{ mesaj.GonderenTip }}', 
+                                        {% if mesaj.GonderenTip == 'Ogretmen' %}
+                                            '{{ ogretmen.Ad }} {{ ogretmen.Soyad }}'
+                                        {% elif mesaj.GonderenTip == 'Ogrenci' %}
+                                            '{{ ogrenci.Ad }} {{ ogrenci.Soyad }}'
+                                        {% else %}
+                                            '{{ admin.Ad }} {{ admin.Soyad }}'
+                                        {% endif %})">
+                                    <i class="fas fa-reply me-1"></i>
+                                    Cevapla
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Henüz mesajınız yok</h5>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cevaplama Modal -->
+<div class="modal fade" id="cevapModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mesajı Cevapla</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">
+                    <strong>Kime:</strong> 
+                    <span id="aliciAdi"></span>
+                </p>
+                <form id="cevapForm">
+                    <input type="hidden" id="mesajId" name="mesaj_id">
+                    <div class="mb-3">
+                        <label class="form-label">Cevabınız</label>
+                        <textarea class="form-control" name="cevap" rows="5" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-primary" onclick="mesajGonder()">Gönder</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function cevapla(mesajId, gonderenTip, gonderenAd) {
+    document.getElementById('mesajId').value = mesajId;
+    document.getElementById('aliciAdi').textContent = gonderenAd + ' (' + gonderenTip + ')';
+    
+    const modal = new bootstrap.Modal(document.getElementById('cevapModal'));
+    modal.show();
+}
+
+function mesajGonder() {
+    const form = document.getElementById('cevapForm');
+    const formData = new FormData(form);
+    const mesajId = document.getElementById('mesajId').value;
+    
+    fetch(`/admin/mesaj/cevapla/${mesajId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('cevapModal'));
+            modal.hide();
+            form.reset();
+            alert(data.message);
+            location.reload();  // Sayfayı yenile
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        alert('Bir hata oluştu!');
+    });
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Arama Sonuçları - {{ aranan }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-search text-primary me-2"></i>
+                "{{ aranan }}" için arama sonuçları
+                <small class="text-muted">({{ sonuc_sayisi }} sonuç)</small>
+            </h2>
+
+            {% if videolar %}
+            <div class="row g-4">
+                {% for video in videolar %}
+                <div class="col-md-4">
+                    <a href="{{ url_for('ders_detay', ders_id=video.konu.unite.DersID, video_id=video.VideoID) }}" 
+                       class="video-card-link">
+                        <div class="video-card">
+                            <div class="video-thumbnail">
+                                <iframe 
+                                    src="{{ video.embed_url }}" 
+                                    title="{{ video.Baslik }}"
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
+                            </div>
+                            <div class="video-info">
+                                <h3 class="video-title">{{ video.Baslik }}</h3>
+                                <div class="video-category mb-2">
+                                    <span class="badge bg-primary me-2">
+                                        <i class="fas fa-book-open me-1"></i>
+                                        {{ video.konu.unite.UniteAdi }}
+                                    </span>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-bookmark me-1"></i>
+                                        {{ video.konu.KonuAdi }}
+                                    </span>
+                                </div>
+                                <p class="video-desc">{{ video.Aciklama[:100] }}{% if video.Aciklama|length > 100 %}...{% endif %}</p>
+                                <div class="video-meta">
+                                    <span class="uploader">
+                                        <i class="fas fa-user me-1"></i>
+                                        {{ video.YukleyenTip }}: {{ video.yukleyen_adi }}
+                                    </span>
+                                </div>
+                                <div class="video-date mt-2 text-muted">
+                                    <small>
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        {{ video.YuklemeTarihi.strftime('%d.%m.%Y') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                "{{ aranan }}" ile ilgili sonuç bulunamadı.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

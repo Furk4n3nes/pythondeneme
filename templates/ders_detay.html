@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ders.DersAdi }} - Üniteler{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sol Taraf - Video İçeriği -->
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Ana Sayfa</a></li>
+                    <li class="breadcrumb-item active">{{ ders.DersAdi }}</li>
+                </ol>
+            </nav>
+
+            <!-- Seçilen konunun videoları burada gösterilecek -->
+            <div id="video-content">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Lütfen sağ taraftan bir konu seçin.
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Taraf - Üniteler ve Konular -->
+        <div class="col-md-4">
+            <div class="sidebar-nav">
+                <!-- Ders başlığı buraya taşındı -->
+                <div class="ders-header-sidebar mb-4">
+                    <h1 class="display-6">
+                        <i class="fas fa-book text-primary me-2"></i>
+                        {{ ders.DersAdi }}
+                    </h1>
+                    <p class="lead text-muted mb-0">{{ ders.Aciklama }}</p>
+                </div>
+
+                <div class="unite-list-sidebar">
+                    {% for unite in uniteler %}
+                    <div class="unite-item mb-3">
+                        <div class="unite-header-sidebar" data-bs-toggle="collapse" 
+                             data-bs-target="#unite{{ unite.UniteID }}">
+                            <i class="fas fa-chevron-right unite-icon"></i>
+                            <span class="unite-no">{{ unite.UniteNo }}.</span>
+                            {{ unite.UniteAdi }}
+                        </div>
+                        <div class="collapse" id="unite{{ unite.UniteID }}">
+                            <div class="konu-list-sidebar">
+                                {% for konu in unite.konular %}
+                                <a href="#" onclick="loadKonuVideolar({{ konu.KonuID }}); return false;" 
+                                   class="konu-link" data-konu-id="{{ konu.KonuID }}">
+                                    <span class="konu-no">{{ konu.KonuNo }}.</span>
+                                    {{ konu.KonuAdi }}
+                                    <span class="video-count">
+                                        <i class="fas fa-video ms-1"></i>
+                                        {{ konu.video_sayisi }}
+                                    </span>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Video yükleme için JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if initial_video %}
+        // İlgili konuyu bul ve aktif et
+        const activeKonuLink = document.querySelector('[data-konu-id="{{ initial_konu_id }}"]');
+        if (activeKonuLink) {
+            // Üniteyi aç
+            const uniteCollapse = activeKonuLink.closest('.collapse');
+            if (uniteCollapse) {
+                new bootstrap.Collapse(uniteCollapse, {
+                    show: true
+                });
+            }
+            
+            // Konuyu aktif yap
+            document.querySelectorAll('.konu-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            activeKonuLink.classList.add('active');
+            
+            // Video içeriğini yükle
+            loadVideoContent({{ initial_video|tojson|safe }});
+        }
+    {% endif %}
+});
+
+function loadKonuVideolar(konuId) {
+    // Aktif konuyu vurgula
+    document.querySelectorAll('.konu-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    document.querySelector(`[data-konu-id="${konuId}"]`).classList.add('active');
+    
+    // Videoları yükle
+    fetch(`/konu/${konuId}/videolar/json`)
+        .then(response => response.json())
+        .then(videolar => {
+            const videoContent = document.getElementById('video-content');
+            
+            if (videolar.length === 0) {
+                videoContent.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Bu konuda henüz video bulunmuyor.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Ana video ve bilgileri
+            const mainVideo = videolar[0];
+            let html = `
+                <div class="main-video-container mb-4">
+                    <div class="main-video-frame">
+                        <iframe 
+                            src="${mainVideo.embed_url}" 
+                            title="${mainVideo.baslik}"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="video-details mt-3">
+                        <h2 class="video-title mb-3">${mainVideo.baslik}</h2>
+                        
+                        <!-- Video Detay/Yorum Sekmeleri -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="details-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#details" type="button" role="tab">
+                                    <i class="fas fa-info-circle me-2"></i>Video Bilgileri
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="comments-tab" data-bs-toggle="tab" 
+                                        data-bs-target="#comments" type="button" role="tab">
+                                    <i class="fas fa-comments me-2"></i>Yorumlar
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <!-- Sekme İçerikleri -->
+                        <div class="tab-content">
+                            <!-- Video Detayları -->
+                            <div class="tab-pane fade show active" id="details" role="tabpanel">
+                                <div class="video-meta-info mb-3">
+                                    <span class="uploader me-3">
+                                        <i class="fas fa-user me-1"></i>
+                                        ${mainVideo.yukleyen_tip}: ${mainVideo.yukleyen_adi}
+                                    </span>
+                                    <span class="upload-date">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        ${mainVideo.yukleme_tarihi}
+                                    </span>
+                                </div>
+                                <div class="video-description">
+                                    <p>${mainVideo.aciklama}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Yorumlar -->
+                            <div class="tab-pane fade" id="comments" role="tabpanel">
+                                <div class="comments-section">
+                                    <div class="comments-list" id="comments-list">
+                                        <div class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Yorumlar yükleniyor...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Diğer videolar
+            if (videolar.length > 1) {
+                html += '<h3 class="mb-3">Diğer Videolar</h3><div class="row g-4">';
+                videolar.slice(1).forEach(video => {
+                    html += `
+                        <div class="col-md-6">
+                            <div class="video-card">
+                                <div class="video-thumbnail">
+                                    <iframe 
+                                        src="${video.embed_url}" 
+                                        title="${video.baslik}"
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <div class="video-info">
+                                    <h4 class="video-title">${video.baslik}</h4>
+                                    <div class="video-meta">
+                                        <span class="uploader">
+                                            <i class="fas fa-user me-1"></i>
+                                            ${video.yukleyen_tip}: ${video.yukleyen_adi}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            videoContent.innerHTML = html;
+            loadVideoComments(mainVideo.video_id);
+        })
+        .catch(error => {
+            console.error('Videolar yüklenirken hata oluştu:', error);
+            document.getElementById('video-content').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Videolar yüklenirken bir hata oluştu.
+                </div>
+            `;
+        });
+}
+
+function loadVideoContent(video) {
+    const videoContent = document.getElementById('video-content');
+    
+    if (video.length === 0) {
+        videoContent.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Bu konuda henüz video bulunmuyor.
+            </div>
+        `;
+        return;
+    }
+    
+    // Ana video ve bilgileri
+    const mainVideo = video[0];
+    let html = `
+        <div class="main-video-container mb-4">
+            <div class="main-video-frame">
+                <iframe 
+                    src="${mainVideo.embed_url}" 
+                    title="${mainVideo.baslik}"
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <div class="video-details mt-3">
+                <h2 class="video-title mb-3">${mainVideo.baslik}</h2>
+                
+                <!-- Video Detay/Yorum Sekmeleri -->
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" 
+                                data-bs-target="#details" type="button" role="tab">
+                            <i class="fas fa-info-circle me-2"></i>Video Bilgileri
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="comments-tab" data-bs-toggle="tab" 
+                                data-bs-target="#comments" type="button" role="tab">
+                            <i class="fas fa-comments me-2"></i>Yorumlar
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- Sekme İçerikleri -->
+                <div class="tab-content">
+                    <!-- Video Detayları -->
+                    <div class="tab-pane fade show active" id="details" role="tabpanel">
+                        <div class="video-meta-info mb-3">
+                            <span class="uploader me-3">
+                                <i class="fas fa-user me-1"></i>
+                                ${mainVideo.yukleyen_tip}: ${mainVideo.yukleyen_adi}
+                            </span>
+                            <span class="upload-date">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                ${mainVideo.yukleme_tarihi}
+                            </span>
+                        </div>
+                        <div class="video-description">
+                            <p>${mainVideo.aciklama}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Yorumlar -->
+                    <div class="tab-pane fade" id="comments" role="tabpanel">
+                        <div class="comments-section">
+                            <div class="comments-list" id="comments-list">
+                                <div class="text-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Yorumlar yükleniyor...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Diğer videolar
+    if (video.length > 1) {
+        html += '<h3 class="mb-3">Diğer Videolar</h3><div class="row g-4">';
+        video.slice(1).forEach(video => {
+            html += `
+                <div class="col-md-6">
+                    <div class="video-card">
+                        <div class="video-thumbnail">
+                            <iframe 
+                                src="${video.embed_url}" 
+                                title="${video.baslik}"
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        <div class="video-info">
+                            <h4 class="video-title">${video.baslik}</h4>
+                            <div class="video-meta">
+                                <span class="uploader">
+                                    <i class="fas fa-user me-1"></i>
+                                    ${video.yukleyen_tip}: ${video.yukleyen_adi}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+    
+    videoContent.innerHTML = html;
+    loadVideoComments(mainVideo.video_id);
+}
+
+// Yorumları yükleyen yeni fonksiyon
+function loadVideoComments(videoId) {
+    const commentsList = document.getElementById('comments-list');
+    
+    fetch(`/video/${videoId}/yorumlar/json`)
+        .then(response => response.json())
+        .then(yorumlar => {
+            if (yorumlar.length === 0) {
+                commentsList.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Bu videoya henüz yorum yapılmamış.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            yorumlar.forEach(yorum => {
+                html += `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <div class="comment-user">
+                                <i class="fas fa-user me-2"></i>
+                                ${yorum.kullanici_tipi}: ${yorum.kullanici_adi}
+                            </div>
+                            <div class="comment-date">
+                                <i class="fas fa-clock me-1"></i>
+                                ${yorum.yorum_tarihi}
+                            </div>
+                        </div>
+                        <div class="comment-content">
+                            ${yorum.yorum_metni}
+                        </div>
+                    </div>
+                `;
+            });
+            commentsList.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Yorumlar yüklenirken hata oluştu:', error);
+            commentsList.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Yorumlar yüklenirken bir hata oluştu.
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %} 
